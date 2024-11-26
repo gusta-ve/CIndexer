@@ -2,10 +2,10 @@
 Este projeto implementa um indexador de texto eficiente utilizando Árvores Binárias de Pesquisa (BST) em C. O sistema permite armazenar
 buscar e manipular palavras em um banco de dados, oferecendo funcionalidades como busca por substring e cálculo de tempo de busca.
 
-###Integrantes do Grupo:
-Kaue Barbi
-Gustavo Almeida
-Leonardo Culler
+### Integrantes do Grupo
+* Kaue Barbi
+* Gustavo Almeida
+* Leonardo Culler
 
 ## Instalação
 
