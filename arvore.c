@@ -5,117 +5,122 @@
 #include <ctype.h>
 #include <time.h>
 
-No* criaNo(char* palavra) {
+No* criarNovoNo(char* palavra) {
     No* novo = (No*)malloc(sizeof(No));
     if (novo) {
         strcpy(novo->palavra, palavra);
         novo->esquerda = NULL;
-        novo->direito = NULL;
+        novo->direita = NULL;
     }
     return novo;
 }
 
-No* inseriNo(No* raiz, char* palavra) {
+No* adicionarNo(No* raiz, char* palavra) {
     if (raiz == NULL) {
-        return criaNo(palavra);
+        return criarNovoNo(palavra);
     }
     if (strcmp(palavra, raiz->palavra) < 0) {
-        raiz->esquerda = inseriNo(raiz->esquerda, palavra);
+        raiz->esquerda = adicionarNo(raiz->esquerda, palavra);
     } else if (strcmp(palavra, raiz->palavra) > 0) {
-        raiz->direito = inseriNo(raiz->direito, palavra);
+        raiz->direita = adicionarNo(raiz->direita, palavra);
     }
     return raiz;
 }
 
-int inserirUnico(No** raiz, char* palavra) {
+int inserirPalavraUnica(No** raiz, char* palavra) {
     if (*raiz == NULL) {
-        *raiz = criaNo(palavra);
+        *raiz = criarNovoNo(palavra);
         return 1;
     }
     int cmp = strcmp(palavra, (*raiz)->palavra);
     if (cmp < 0) {
-        return inserirUnico(&(*raiz)->esquerda, palavra);
+        return inserirPalavraUnica(&(*raiz)->esquerda, palavra);
     } else if (cmp > 0) {
-        return inserirUnico(&(*raiz)->direito, palavra);
+        return inserirPalavraUnica(&(*raiz)->direita, palavra);
     }
-    return 0; // Palavra duplicada
+    return 0;
 }
 
-bool busca(No* raiz, char* palavra) {
+bool buscarPalavra(No* raiz, char* palavra) {
+    clock_t inicio = clock();
+
     if (raiz == NULL) {
         return false;
     }
     int cmp = strcmp(palavra, raiz->palavra);
     if (cmp == 0) {
+        clock_t fim = clock();
+        double tempoGasto = ((double)(fim - inicio)) / CLOCKS_PER_SEC;
+        printf("Tempo de busca: %.6f segundos.\n", tempoGasto);
         return true;
     } else if (cmp < 0) {
-        return busca(raiz->esquerda, palavra);
+        return buscarPalavra(raiz->esquerda, palavra);
     } else {
-        return busca(raiz->direito, palavra);
+        return buscarPalavra(raiz->direita, palavra);
     }
 }
 
-void buscaEspecializada(No* raiz, char* trecho) {
+void buscarPorTrecho(No* raiz, char* trecho) {
     if (raiz != NULL) {
-        buscaEspecializada(raiz->esquerda, trecho);
+        buscarPorTrecho(raiz->esquerda, trecho);
         if (strstr(raiz->palavra, trecho) != NULL) {
             printf("- %s\n", raiz->palavra);
         }
-        buscaEspecializada(raiz->direito, trecho);
+        buscarPorTrecho(raiz->direita, trecho);
     }
 }
 
-void removeNo(No** raiz, char* palavra) {
+void removerPalavra(No** raiz, char* palavra) {
     if (*raiz == NULL) return;
     int cmp = strcmp(palavra, (*raiz)->palavra);
     if (cmp < 0) {
-        removeNo(&(*raiz)->esquerda, palavra);
+        removerPalavra(&(*raiz)->esquerda, palavra);
     } else if (cmp > 0) {
-        removeNo(&(*raiz)->direito, palavra);
+        removerPalavra(&(*raiz)->direita, palavra);
     } else {
         if ((*raiz)->esquerda == NULL) {
-            No* temp = (*raiz)->direito;
+            No* temp = (*raiz)->direita;
             free(*raiz);
             *raiz = temp;
-        } else if ((*raiz)->direito == NULL) {
+        } else if ((*raiz)->direita == NULL) {
             No* temp = (*raiz)->esquerda;
             free(*raiz);
             *raiz = temp;
         } else {
-            No* temp = (*raiz)->direito;
+            No* temp = (*raiz)->direita;
             while (temp->esquerda != NULL) {
                 temp = temp->esquerda;
             }
             strcpy((*raiz)->palavra, temp->palavra);
-            removeNo(&(*raiz)->direito, temp->palavra);
+            removerPalavra(&(*raiz)->direita, temp->palavra);
         }
     }
 }
 
-void imprimeResultado(No* raiz) {
+void listarPalavras(No* raiz) {
     if (raiz != NULL) {
-        imprimeResultado(raiz->esquerda);
+        listarPalavras(raiz->esquerda);
         printf("- %s\n", raiz->palavra);
-        imprimeResultado(raiz->direito);
+        listarPalavras(raiz->direita);
     }
 }
 
-void liberaNo(No* raiz) {
+void liberarMemoria(No* raiz) {
     if (raiz != NULL) {
-        liberaNo(raiz->esquerda);
-        liberaNo(raiz->direito);
+        liberarMemoria(raiz->esquerda);
+        liberarMemoria(raiz->direita);
         free(raiz);
     }
 }
 
-int contarNos(No* raiz) {
+int contarQuantidadeNos(No* raiz) {
     if (raiz == NULL) {
         return 0;
     }
-    return 1 + contarNos(raiz->esquerda) + contarNos(raiz->direito);
+    return 1 + contarQuantidadeNos(raiz->esquerda) + contarQuantidadeNos(raiz->direita);
 }
 
-void padronizacao(char* palavra) {
+void padronizarPalavra(char* palavra) {
     int i, j = 0;
     char temp[strlen(palavra) + 1];
     for (i = 0; palavra[i] != '\0'; i++) {
@@ -126,46 +131,25 @@ void padronizacao(char* palavra) {
         else if (strchr("óòôõö", c)) c = 'o';
         else if (strchr("úùûü", c)) c = 'u';
         else if (c == '\xE7') c = 'c'; // Unicode para 'ç'
-        if (isalnum(c)) { 
-            temp[j++] = tolower(c);
+        
+        if (isalnum(c)) {  // Permitir apenas alfanuméricos (letras e números)
+            temp[j++] = tolower(c); // Converte para minúscula
         }
     }
     temp[j] = '\0';
     strcpy(palavra, temp);
 }
 
-void calcularTempoBusca(No* raiz) {
-    char palavra[100];
-    printf("Digite a palavra para medir o tempo de busca: ");
-    scanf("%s", palavra);
-    padronizacao(palavra);
-    clock_t inicio = clock();
-    bool resultado = busca(raiz, palavra);
-    clock_t fim = clock();
-    double tempoGasto = ((double)(fim - inicio)) / CLOCKS_PER_SEC;
-    if (resultado) {
-        printf("Palavra '%s' encontrada em %.6f segundos.\n", palavra, tempoGasto);
-    } else {
-        printf("Palavra '%s' não encontrada (tempo: %.6f segundos).\n", palavra, tempoGasto);
-    }
-}
-
-void carregarArquivo(No** raiz) {
-    const char* nomeArquivo = "palavras.txt"; // Nome fixo do arquivo
+void carregarPalavrasDeArquivo(No** raiz, char* nomeArquivo) {
     FILE* arquivo = fopen(nomeArquivo, "r");
+    char palavra[100];
     if (arquivo == NULL) {
-        printf("❌ Não foi possível abrir o arquivo '%s'.\n", nomeArquivo);
+        printf("Erro ao abrir o arquivo!\n");
         return;
     }
-    char palavra[100];
-    int totalInseridas = 0;
     while (fscanf(arquivo, "%s", palavra) != EOF) {
-        padronizacao(palavra);
-        if (inserirUnico(raiz, palavra)) {
-            totalInseridas++;
-        }
+        padronizarPalavra(palavra);
+        inserirPalavraUnica(raiz, palavra);
     }
     fclose(arquivo);
-    printf("✅ %d palavras foram carregadas do arquivo '%s'.\n", totalInseridas, nomeArquivo);
-    printf("📊 Total de palavras na árvore: %d\n", contarNos(*raiz));
 }
